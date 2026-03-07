@@ -1,84 +1,142 @@
-# ptz-tracking-dock (OBS native plugin)
+# PTZ Tracking Dock for OBS Studio
 
-Native OBS Studio frontend plugin that adds a dock panel for controlling PTZ autotracking via HTTP CGI, plus global OBS hotkeys.
+PTZ Tracking Dock is a native OBS Studio plugin for fast PTZ AI tracking toggle control from inside OBS.
 
-## Features (v0 scaffold)
+It adds a compact OBS dock with per-camera tracking ON/OFF buttons, an ALL OFF panic action, and global OBS hotkeys. The plugin uses native Qt HTTP requests to camera CGI endpoints, so it works without browser source CORS limitations.
 
-- Dock panel inside OBS:
-  - Camera list (Name + IP)
-  - Per-camera **ON** / **OFF** buttons
-  - **ALL OFF**
-  - Bottom status line
-  - Settings dialog to add/remove/reorder cameras
-- Hotkeys (true OBS hotkeys, not browser-focused):
-  - Camera 1..9 ON
-  - Camera 1..9 OFF
+Keywords: OBS PTZ plugin, OBS camera tracking toggle, PTZ autotracking OBS, OBS hotkeys for PTZ, Samtav PTZ CGI.
+
+## Why This Plugin
+
+- Control PTZ tracking directly in OBS, not in a browser tab.
+- Use true OBS frontend hotkeys for camera tracking ON/OFF.
+- Keep a lightweight workflow focused on one job: tracking toggle reliability.
+
+## Features
+
+- OBS dock panel for PTZ tracking control.
+- Multiple camera entries (name + host/IP).
+- Per-camera tracking `ON` / `OFF` toggle buttons.
+- Global `ALL OFF` button.
+- Global OBS hotkeys:
+  - Camera 1..9 tracking ON
+  - Camera 1..9 tracking OFF
   - ALL OFF
-- Sends HTTP GET requests to camera CGI endpoints (Qt Network).
+- Responsive dock layout for small OBS dock sizes.
+- Camera settings dialog (add, remove, reorder cameras).
+- Native HTTP status reporting in dock status bar.
+- Confirmation-aware response parsing (when camera response includes track state text).
 
-## How it stores cameras
+## Supported Control Method
 
-A small JSON file in the module config folder (via `obs_module_config_path`), containing an array of cameras `{ name, host }`.
+This plugin currently controls tracking using vendor HTTP CGI endpoints.
 
-## Build prerequisites
+Commands used:
 
-This repository is a **plugin source scaffold**. You typically build it **against the OBS Studio source tree** (recommended), because that guarantees the right headers, frontend API, Qt version, and build flags.
+- `http://<host>/cgi-bin/param.cgi?set_overlay&autotracking&on`
+- `http://<host>/cgi-bin/param.cgi?set_overlay&autotracking&off`
 
-You will need:
+Note:
 
-- OBS Studio source (matching your OBS version)
-- CMake (3.20+)
-- C++ compiler (Visual Studio on Windows; Xcode/clang on macOS)
-- Qt (OBS uses Qt; version depends on your OBS branch)
+- ONVIF/VISCA are not used in this plugin right now.
+- AI tracking is typically vendor-specific and not standardized across ONVIF/VISCA.
 
-### OBS 32.0.2 notes
+## Installation
 
-- OBS 32.x uses **Qt 6**.
-- Build this plugin against the **OBS 32.0.2 source tree/tag** to avoid ABI/Qt mismatches.
+## Option 1: Download Release Artifacts (recommended)
 
-## Build (recommended: inside OBS source tree)
+Open Releases:
 
-1. Clone OBS Studio.
-2. Checkout the OBS 32.0.2 tag (or the exact commit you’re using to build OBS 32.0.2).
-3. Copy this folder into the OBS source tree at: `obs-studio/plugins/ptz-tracking-dock`
-4. Add it to the OBS plugins build:
-  - Edit `obs-studio/plugins/CMakeLists.txt` and add:
-    - `add_subdirectory(ptz-tracking-dock)`
-5. Configure/build OBS as usual.
+- `https://github.com/tallyhubpro/ptz-tracking-dock/releases`
 
-## Output artifacts
+Assets:
 
-- macOS: the build produces a bundle named `ptz-tracking-dock.plugin` (a folder bundle).
-- Windows: the build produces `ptz-tracking-dock.dll`.
+- `ptz-tracking-dock-macos.zip`
+- `ptz-tracking-dock-windows.zip`
 
-Exact output location depends on how you build OBS (and generator), but you can search the build folder for:
+### macOS install
 
-- `ptz-tracking-dock.plugin`
-- `ptz-tracking-dock.dll`
+1. Download `ptz-tracking-dock-macos.zip`.
+2. Extract `ptz-tracking-dock.plugin`.
+3. Copy to one of these locations:
+   - User plugins: `~/Library/Application Support/obs-studio/plugins/`
+   - App bundle plugins: `/Applications/OBS.app/Contents/PlugIns/`
+4. Restart OBS.
 
-## Install (manual)
+### Windows install
 
-Because OBS plugin install paths vary by build/distribution and CPU arch, the safest approach is:
+1. Download `ptz-tracking-dock-windows.zip`.
+2. Extract contents.
+3. Copy `obs-plugins/64bit/ptz-tracking-dock.dll` into your OBS plugin path.
+4. Restart OBS.
 
-- Build OBS + plugin
-- Find the built plugin artifact in your build output
-- Copy it into OBS’s plugin folder for your install
+## Option 2: Build From Source
 
-Typical locations:
+### Prerequisites
 
-- macOS (OBS app bundle): `OBS.app/Contents/PlugIns/` (bundle plugins)
-- Windows (64-bit OBS): `obs-plugins/64bit/`
+- CMake `3.20+`
+- C++17 toolchain
+- Qt (OBS-compatible version)
+- OBS Studio source tree (recommended for production builds)
 
-If you’re building OBS from source, OBS’s build system often already stages plugins into the right runtime folder for running OBS from the build tree.
+### Recommended build flow
 
-## Notes
+1. Clone OBS Studio (matching your OBS version).
+2. Place this project in `obs-studio/plugins/ptz-tracking-dock`.
+3. Add to `obs-studio/plugins/CMakeLists.txt`:
+   - `add_subdirectory(ptz-tracking-dock)`
+4. Build OBS normally.
 
-- Endpoint used:
-  - `http://<host>/cgi-bin/param.cgi?set_overlay&autotracking&on`
-  - `http://<host>/cgi-bin/param.cgi?set_overlay&autotracking&off`
-- This plugin does not rely on browser CORS behavior; it uses native HTTP.
+## Usage
 
-## Next steps
+1. Open OBS.
+2. Open the `PTZ Tracking` dock.
+3. Click the settings icon and add your camera host/IP entries.
+4. Toggle `ON` or `OFF` per camera.
+5. Use `ALL OFF` when needed.
+6. Optionally bind OBS hotkeys for hands-free operation.
 
-- Confirm your camera’s exact endpoint/params (Samtav models can vary).
-- Add optional live-status polling if your cameras provide a readable status endpoint.
+## Status Bar Messages
+
+Dock status messages indicate request progress and result:
+
+- `Status: Sending: ...`
+- `OK: Confirmed: ...` when response text confirms tracking state.
+- `Status: HTTP 200 (unconfirmed): ...` when request succeeded but response did not explicitly confirm state.
+- `ERR: ...` for timeout, network, or HTTP errors.
+
+## Configuration Storage
+
+Camera entries are stored as JSON using OBS module config storage via `obs_module_config_path`.
+
+Stored schema:
+
+- `[{ "name": "Camera A", "host": "192.168.0.100" }]`
+
+## CI and Release Automation
+
+GitHub Actions automatically builds artifacts on push/tag:
+
+- Windows zip artifact
+- macOS zip artifact
+- On tags, both assets are attached to the GitHub Release automatically.
+
+Workflow file:
+
+- `.github/workflows/windows-artifact.yml`
+
+## Troubleshooting
+
+- Plugin not loading in OBS:
+  - Confirm plugin was built for your OBS/Qt compatibility.
+  - Check OBS log file in `~/Library/Application Support/obs-studio/logs/` (macOS) or `%APPDATA%/obs-studio/logs/` (Windows).
+- Request says success but camera does not track:
+  - Verify your camera supports this CGI endpoint.
+  - Confirm auth/session requirements for your model.
+  - Test endpoint in browser/curl using the same host.
+
+## Roadmap
+
+- Optional preset action chaining (for example: tracking ON + preset recall).
+- Optional readback endpoint support per camera model.
+- Additional vendor endpoint templates.
