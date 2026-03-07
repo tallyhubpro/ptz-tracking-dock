@@ -1,4 +1,4 @@
-name: Windows Build Artifact
+name: Desktop Build Artifacts
 
 on:
   push:
@@ -52,11 +52,69 @@ jobs:
       - name: Upload CI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ptz-tracking-dock-windows-${{ github.sha }}
+          name: ptz-tracking-dock-windows
           path: ptz-tracking-dock-windows.zip
 
-      - name: Attach zip to GitHub Release (tags only)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
         with:
-          files: ptz-tracking-dock-windows.zip
+          version: "6.8.3"
+          arch: "clang_64"
+          cache: true
+
+      - name: Configure (CMake + Ninja)
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPTZ_TRACKING_DOCK_DEV_STUBS=ON
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Collect plugin artifact
+        run: |
+          bundle="$(find build -type d -name 'ptz-tracking-dock.plugin' | head -n 1)"
+          if [[ -z "$bundle" ]]; then
+            echo "ptz-tracking-dock.plugin not found in build output"
+            exit 1
+          fi
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$bundle" ptz-tracking-dock-macos.zip
+
+      - name: Upload CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ptz-tracking-dock-macos
+          path: ptz-tracking-dock-macos.zip
+
+  publish-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - build-windows
+      - build-macos
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Create or update release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          gh release view "$tag" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1 || \
+            gh release create "$tag" --repo "${GITHUB_REPOSITORY}" --generate-notes
+          gh release upload "$tag" \
+            dist/ptz-tracking-dock-windows/ptz-tracking-dock-windows.zip \
+            dist/ptz-tracking-dock-macos/ptz-tracking-dock-macos.zip \
+            --repo "${GITHUB_REPOSITORY}" \
+            --clobber
