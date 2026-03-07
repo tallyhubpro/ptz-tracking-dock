@@ -23,18 +23,19 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: "6.8.3"
+          arch: "win64_msvc2022_64"
           cache: true
 
       - name: Configure (CMake + Ninja)
         shell: pwsh
         run: |
-          cmake -S . -B build -G Ninja `
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_BUILD_TYPE=Release `
             -DPTZ_TRACKING_DOCK_DEV_STUBS=ON
 
       - name: Build
         shell: pwsh
-        run: cmake --build build --config Release
+        run: cmake --build build --config Release --parallel
 
       - name: Collect plugin artifact
         shell: pwsh

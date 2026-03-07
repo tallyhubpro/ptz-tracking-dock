@@ -80,6 +80,7 @@ else()
     if(PTZ_TRACKING_DOCK_DEV_STUBS)
       message(WARNING "Building with OBS API stubs (dev-only). Build against OBS source for production binaries.")
       target_include_directories(ptz-tracking-dock PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/obs_stubs)
+      target_sources(ptz-tracking-dock PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/obs_stubs/obs_stubs.cpp)
       if(APPLE)
         # Let OBS resolve OBS symbols at runtime when loading the plugin bundle.
         target_link_options(ptz-tracking-dock PRIVATE "-Wl,-undefined,dynamic_lookup")
