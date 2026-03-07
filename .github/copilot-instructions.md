@@ -1,0 +1,5 @@
+- Keep changes minimal and focused on an OBS Studio native plugin.
+- Prefer Qt Widgets + Qt Network; avoid extra dependencies unless necessary.
+- Hotkeys must be true OBS hotkeys (frontend hotkeys).
+- Persist camera config via `obs_module_config_path` JSON.
+- Do not add extra UI pages or fancy styling; keep dock compact.

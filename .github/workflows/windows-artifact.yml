@@ -1,0 +1,61 @@
+name: Windows Build Artifact
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: "6.8.3"
+          cache: true
+
+      - name: Configure (CMake + Ninja)
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DPTZ_TRACKING_DOCK_DEV_STUBS=ON
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --config Release
+
+      - name: Collect plugin artifact
+        shell: pwsh
+        run: |
+          $dll = Get-ChildItem -Path build -Filter ptz-tracking-dock.dll -Recurse | Select-Object -First 1
+          if (-not $dll) {
+            throw "ptz-tracking-dock.dll not found in build output"
+          }
+
+          New-Item -ItemType Directory -Force -Path artifact/obs-plugins/64bit | Out-Null
+          Copy-Item $dll.FullName artifact/obs-plugins/64bit/ptz-tracking-dock.dll -Force
+          Compress-Archive -Path artifact/obs-plugins -DestinationPath ptz-tracking-dock-windows.zip -Force
+
+      - name: Upload CI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ptz-tracking-dock-windows-${{ github.sha }}
+          path: ptz-tracking-dock-windows.zip
+
+      - name: Attach zip to GitHub Release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ptz-tracking-dock-windows.zip
