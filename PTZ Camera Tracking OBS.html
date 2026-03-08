@@ -3,161 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PTZ Tracking Control</title>
+<title>PTZ Tracking</title>
 
 <style>
 body{
 margin:0;
-padding:3px;
+padding:6px;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-background:#1f1f23;
-color:#f1f1f1;
-font-size:11px;
-}
-
-h3{
-margin:0 0 3px;
-font-size:10px;
-font-weight:700;
-text-transform:uppercase;
-letter-spacing:.45px;
-color:#a3a3ad;
+background:#23262b;
+color:#f3f4f6;
+font-size:12px;
 }
 
 .dock{
 max-width:100%;
 margin:0 auto;
+display:flex;
+flex-direction:column;
+gap:6px;
 }
 
-.card{
-background:#2b2b31;
-border:1px solid #3b3b43;
-border-radius:8px;
-padding:4px;
-margin-bottom:3px;
+.topBar{
+display:flex;
+justify-content:flex-end;
 }
 
-.cameraHead{
+.settingsToggle{
+width:24px;
+height:24px;
+padding:0;
+font-size:13px;
+line-height:1;
+border:1px solid #5a606d;
+border-radius:4px;
+background:#353b46;
+color:#f3f4f6;
+cursor:pointer;
+}
+
+.cameraList{
+display:flex;
+flex-direction:column;
+gap:4px;
+overflow:visible;
+flex:0 0 auto;
+min-height:0;
+max-height:none;
+}
+
+.cameraRow{
 display:flex;
 align-items:center;
 justify-content:space-between;
 gap:6px;
+padding:2px 0;
 }
 
-.dragHandle{
-width:auto;
-padding:2px 4px;
-font-size:10px;
-background:#3b3b43;
-color:#d7d7df;
-border:1px solid #4a4a54;
-border-radius:4px;
-cursor:grab;
-line-height:1;
-}
-
-.dragHandle:active{
-cursor:grabbing;
-}
-
-.actions{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:3px;
-}
-
-#cameraList{
-display:block;
-}
-
-.dropTarget{
-outline:1px dashed #6b6b76;
-}
-
-.ipSettings{
-display:grid;
-grid-template-columns:1fr 1fr auto;
-gap:3px;
-}
-
-.settingsActions{
-margin-top:3px;
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:3px;
-}
-
-.settingsDock{
-display:flex;
-justify-content:flex-end;
-margin-top:2px;
-}
-
-.settingsToggle{
-width:auto;
-padding:4px 6px;
+.cameraName{
 font-size:12px;
-background:#3b3b43;
-color:#fff;
-border:1px solid #4a4a54;
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis;
+padding-right:6px;
 }
 
-#settingsPanel{
-display:none;
+.settingsRow{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:6px;
+padding:3px;
+border-radius:4px;
+border:1px solid transparent;
 }
 
-#settingsPanel.open{
-display:block;
+.settingsRow.selected{
+border-color:#5a606d;
+background:#2a2f37;
 }
 
 .ipInput{
-background:#1d1d22;
-border:1px solid #3b3b43;
-border-radius:5px;
-color:#f1f1f1;
-font-size:10px;
-padding:4px;
+background:#181b21;
+border:1px solid #4a505d;
+border-radius:4px;
+color:#f3f4f6;
+font-size:12px;
+padding:5px 6px;
 width:100%;
 box-sizing:border-box;
 }
 
-.settingsBtn{
-background:#3b3b43;
-color:#fff;
-font-size:10px;
-font-weight:700;
-padding:4px 6px;
-border:none;
-border-radius:5px;
+.btn{
+background:#3a404b;
+color:#f3f4f6;
+font-size:12px;
+font-weight:600;
+padding:5px 8px;
+border:1px solid #5a606d;
+border-radius:4px;
 cursor:pointer;
-width:100%;
 }
 
-.removeBtn{
-background:#5d2c2c;
-}
-
-.addBtn{
-background:#284a7a;
-}
-
-button{
-padding:4px;
-font-size:13px;
-font-weight:700;
-border:none;
-border-radius:5px;
-cursor:pointer;
-width:100%;
-letter-spacing:0.2px;
-transition:filter .15s ease;
-line-height:1;
-display:flex;
-align-items:center;
-justify-content:center;
-}
-
-button:hover{
+.btn:hover{
 filter:brightness(1.07);
 }
 
@@ -167,115 +113,151 @@ cursor:not-allowed;
 filter:none;
 }
 
-.dragHandle:disabled{
-opacity:.6;
-cursor:not-allowed;
+.allOffBtn{
+width:100%;
+padding:6px 8px;
+font-size:12px;
+font-weight:700;
+border:1px solid #5a606d;
+border-radius:4px;
+background:#434a57;
+color:#f3f4f6;
+cursor:pointer;
 }
 
-.stage{background:#248a3d;color:#fff;}
-.audience{background:#1d6bb5;color:#fff;}
-.stop{background:#b72d2d;color:#fff;}
-
-.camA{background:#248a3d;color:#fff;}
-.camB{background:#1d6bb5;color:#fff;}
-.camC{background:#7b5bbf;color:#fff;}
-.camD{background:#0c8a83;color:#fff;}
-
-.emergency{
-grid-template-columns:1fr;
+.toggleOn{
+background:#3a9a3f;
+border:1px solid #2e7d32;
+color:#fff;
+min-width:72px;
+padding:3px 10px;
+border-radius:11px;
+font-size:12px;
+font-weight:700;
+cursor:pointer;
 }
 
-.icon{
-display:inline-flex;
-align-items:center;
-justify-content:center;
-width:12px;
-height:12px;
-}
-
-.sr-only{
-position:absolute;
-width:1px;
-height:1px;
-padding:0;
-margin:-1px;
-overflow:hidden;
-clip:rect(0,0,0,0);
-white-space:nowrap;
-border:0;
-}
-
-#status{
-padding:4px 5px;
-background:#232329;
-border-radius:6px;
-font-weight:bold;
-border:1px solid #3b3b43;
-font-size:10px;
-line-height:1.2;
-}
-
-#statusPanel{
-margin:0 0 3px;
-display:block;
-text-align:left;
-min-width:0;
-position:sticky;
-bottom:0;
-z-index:5;
-background:#1f1f23;
-padding-top:2px;
+.toggleOff{
+background:#555b66;
+border:1px solid #6b7280;
+color:#f3f4f6;
+min-width:72px;
+padding:3px 10px;
+border-radius:11px;
+font-size:12px;
+font-weight:700;
+cursor:pointer;
 }
 
 #status{
+padding:2px 0;
+font-size:12px;
+line-height:1.3;
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
 }
 
-.ok{color:#81c784;}
+.ok{color:#a5d6a7;}
 .err{color:#ef9a9a;}
-.info{color:#90caf9;}
-.warn{color:#ffd54f;}
+.info{color:#e5e7eb;}
+.warn{color:#ffe082;}
+
+.settingsModal{
+position:fixed;
+inset:0;
+background:rgba(0,0,0,.45);
+display:none;
+align-items:center;
+justify-content:center;
+padding:12px;
+z-index:20;
+}
+
+.settingsModal.open{
+display:flex;
+}
+
+.settingsDialog{
+width:min(560px,100%);
+background:#2b3039;
+border:1px solid #5a606d;
+border-radius:6px;
+padding:10px;
+box-sizing:border-box;
+}
+
+.dialogTitle{
+font-size:13px;
+font-weight:700;
+margin-bottom:8px;
+}
+
+.dialogBody{
+display:grid;
+grid-template-columns:1fr auto;
+gap:8px;
+}
+
+.settingsTable{
+display:flex;
+flex-direction:column;
+gap:4px;
+max-height:260px;
+overflow:auto;
+}
+
+.toolsColumn{
+display:flex;
+flex-direction:column;
+gap:4px;
+}
+
+.toolsColumn .btn{
+width:34px;
+padding:5px 0;
+}
+
+.dialogActions{
+display:flex;
+justify-content:flex-end;
+gap:6px;
+margin-top:10px;
+}
 </style>
 </head>
 
 <body>
 
 <div class="dock">
-<div id="cameraList"></div>
-
-<div class="card">
-<h3>Emergency</h3>
-<div class="actions emergency">
-
-<button class="stop" onclick="allTrackingOff()" title="All Tracking OFF" aria-label="All Tracking OFF">
-<span class="icon" aria-hidden="true">⚠</span>
-<span class="sr-only">All Tracking OFF</span>
-</button>
-
-</div>
+<div class="topBar">
+<button id="settingsToggle" class="settingsToggle" onclick="openSettingsPanel()" title="Settings" aria-label="Settings" aria-expanded="false">⚙</button>
 </div>
 
-<div class="settingsDock">
-<button id="settingsToggle" class="settingsToggle" onclick="toggleSettingsPanel()" title="Settings" aria-label="Settings" aria-expanded="false">
-<span class="icon" aria-hidden="true">⚙</span>
-<span class="sr-only">Open settings</span>
-</button>
-</div>
+<div id="cameraList" class="cameraList"></div>
 
-<div id="settingsPanel" class="card">
-<h3>Camera Settings</h3>
-<div id="cameraSettingsRows"></div>
-<div class="settingsActions">
-<button class="settingsBtn addBtn" onclick="addCameraRow()" title="Add Camera" aria-label="Add Camera">+ Camera</button>
-<button class="settingsBtn" onclick="saveSettings()" title="Save Settings" aria-label="Save Settings">Save Settings</button>
-</div>
-</div>
+<button class="allOffBtn" onclick="allTrackingOff()" title="All Tracking OFF" aria-label="All Tracking OFF">ALL OFF</button>
 
-<div id="statusPanel">
 <div id="status" class="info">
 Status: Ready
+</div>
+</div>
+
+<div id="settingsModal" class="settingsModal" role="dialog" aria-modal="true" aria-label="PTZ Tracking Cameras">
+<div class="settingsDialog">
+<div class="dialogTitle">PTZ Tracking Cameras</div>
+<div class="dialogBody">
+<div id="cameraSettingsRows" class="settingsTable"></div>
+<div class="toolsColumn">
+<button class="btn" onclick="addCameraRow()" title="Add">+</button>
+<button class="btn" onclick="removeCameraRow()" title="Remove">-</button>
+<button class="btn" onclick="moveSettingsRow(-1)" title="Move Up">↑</button>
+<button class="btn" onclick="moveSettingsRow(1)" title="Move Down">↓</button>
+</div>
+</div>
+<div class="dialogActions">
+<button class="btn" onclick="cancelSettings()">Cancel</button>
+<button class="btn" onclick="saveSettings()">Save</button>
 </div>
 </div>
 </div>
@@ -300,9 +282,10 @@ cameras:[...defaultCameras]
 let suppressLiveStatusUntil = 0
 let liveStatusTimer = null
 let settingsDraft = []
-let draggedCameraId = null
+let selectedSettingsIndex = 0
 let liveRefreshInProgress = false
 const inFlightCameraIds = new Set()
+const cameraTrackingState = new Map()
 
 function sanitizeIp(value){
 const cleaned = (value || "").trim()
@@ -345,124 +328,48 @@ function getCameraById(cameraId){
 return cameraConfig.cameras.find(camera => camera.id === cameraId)
 }
 
-function getTrackButtonClass(index){
-const classes = ["camA","camB","camC","camD"]
-return classes[index % classes.length]
-}
-
 function renderCameraCards(){
 const container = document.getElementById("cameraList")
 
 if(cameraConfig.cameras.length === 0){
-container.innerHTML = "<div class=\"card\"><h3>No Cameras</h3></div>"
+container.innerHTML = "<div class=\"cameraRow\"><span class=\"cameraName\">No Cameras</span></div>"
 return
 }
 
-container.innerHTML = cameraConfig.cameras.map((camera,index) => {
+container.innerHTML = cameraConfig.cameras.map((camera) => {
 const nameEscaped = escapeHtml(camera.name)
-const trackClass = getTrackButtonClass(index)
 const isBusy = inFlightCameraIds.has(camera.id)
 const disabledAttr = isBusy ? " disabled aria-disabled=\"true\"" : ""
+const isOn = cameraTrackingState.get(camera.id) === true
+const toggleClass = isOn ? "toggleOn" : "toggleOff"
+const toggleLabel = isOn ? "ON" : "OFF"
+const toggleTitle = isOn
+? (nameEscaped + " Tracking ON (click to disable)")
+: (nameEscaped + " Tracking OFF (click to enable)")
 
-return "<div class=\"card\">"
-+ "<div class=\"cameraHead\">"
-+ "<h3>" + nameEscaped + "</h3>"
-+ "<button class=\"dragHandle\" draggable=\"true\" ondragstart=\"onCameraDragStart(event,'" + camera.id + "')\" ondragend=\"onCameraDragEnd(event)\" title=\"Drag to reorder\" aria-label=\"Drag to reorder\"" + disabledAttr + ">⋮⋮</button>"
-+ "</div>"
-+ "<div class=\"actions\">"
-+ "<button class=\"" + trackClass + "\" onclick=\"trackOn('" + camera.id + "')\" title=\"" + nameEscaped + " Tracking ON\" aria-label=\"" + nameEscaped + " Tracking ON\"" + disabledAttr + ">"
-+ "<span class=\"icon\" aria-hidden=\"true\">▶</span>"
-+ "<span class=\"sr-only\">" + nameEscaped + " Tracking ON</span>"
-+ "</button>"
-+ "<button class=\"stop\" onclick=\"trackOff('" + camera.id + "')\" title=\"" + nameEscaped + " Tracking OFF\" aria-label=\"" + nameEscaped + " Tracking OFF\"" + disabledAttr + ">"
-+ "<span class=\"icon\" aria-hidden=\"true\">■</span>"
-+ "<span class=\"sr-only\">" + nameEscaped + " Tracking OFF</span>"
-+ "</button>"
- + "</div>"
+return "<div class=\"cameraRow\">"
++ "<span class=\"cameraName\">" + nameEscaped + "</span>"
++ "<button class=\"" + toggleClass + "\" onclick=\"toggleTracking('" + camera.id + "')\" title=\"" + toggleTitle + "\" aria-label=\"" + toggleTitle + "\"" + disabledAttr + ">" + toggleLabel + "</button>"
  + "</div>"
 }).join("")
-
-container.querySelectorAll(".card").forEach((card,index) => {
-const camera = cameraConfig.cameras[index]
-card.dataset.cameraId = camera.id
-card.addEventListener("dragover",onCameraDragOver)
-card.addEventListener("dragleave",onCameraDragLeave)
-card.addEventListener("drop",onCameraDrop)
-})
-
 }
 
-
-function onCameraDragStart(event,cameraId){
-if(inFlightCameraIds.has(cameraId)){
-event.preventDefault()
-return
-}
-draggedCameraId = cameraId
-event.dataTransfer.effectAllowed = "move"
-event.dataTransfer.setData("text/plain",cameraId)
-}
-
-function onCameraDragEnd(){
-draggedCameraId = null
-document.querySelectorAll(".dropTarget").forEach(el => el.classList.remove("dropTarget"))
-}
-
-function onCameraDragOver(event){
-event.preventDefault()
-event.dataTransfer.dropEffect = "move"
-const card = event.currentTarget
-if(card && card.dataset.cameraId !== draggedCameraId){
-card.classList.add("dropTarget")
-}
-}
-
-function onCameraDragLeave(event){
-event.currentTarget.classList.remove("dropTarget")
-}
-
-function onCameraDrop(event){
-event.preventDefault()
-const targetCard = event.currentTarget
-targetCard.classList.remove("dropTarget")
-
-const targetId = targetCard.dataset.cameraId
-const sourceId = draggedCameraId || event.dataTransfer.getData("text/plain")
-
-if(!sourceId || !targetId || sourceId === targetId){
-return
-}
-
-const fromIndex = cameraConfig.cameras.findIndex(camera => camera.id === sourceId)
-const toIndex = cameraConfig.cameras.findIndex(camera => camera.id === targetId)
-
-if(fromIndex < 0 || toIndex < 0){
-return
-}
-
-const [moved] = cameraConfig.cameras.splice(fromIndex,1)
-cameraConfig.cameras.splice(toIndex,0,moved)
-
-saveConfig()
-renderCameraCards()
-
-if(document.getElementById("settingsPanel").classList.contains("open")){
-settingsDraft = cameraConfig.cameras.map(camera => ({...camera}))
-renderSettingsRows()
-}
-
-updateStatus("Camera order updated","ok")
-}
 function renderSettingsRows(){
 const rowsContainer = document.getElementById("cameraSettingsRows")
 
 rowsContainer.innerHTML = settingsDraft.map((camera,index) => {
-return "<div class=\"ipSettings\" style=\"margin-bottom:3px;\">"
-+ "<input class=\"ipInput\" data-field=\"name\" data-index=\"" + index + "\" type=\"text\" placeholder=\"Camera Name\" aria-label=\"Camera Name\" value=\"" + escapeHtml(camera.name) + "\">"
-+ "<input class=\"ipInput\" data-field=\"ip\" data-index=\"" + index + "\" type=\"text\" inputmode=\"decimal\" placeholder=\"Camera IP\" aria-label=\"Camera IP\" value=\"" + escapeHtml(camera.ip) + "\">"
-+ "<button class=\"settingsBtn removeBtn\" onclick=\"removeCameraRow('" + camera.id + "')\" title=\"Remove Camera\" aria-label=\"Remove Camera\">✕</button>"
+const selectedClass = selectedSettingsIndex === index ? " selected" : ""
+return "<div class=\"settingsRow" + selectedClass + "\" onclick=\"selectSettingsRow(" + index + ")\">"
++ "<input class=\"ipInput\" data-field=\"name\" data-index=\"" + index + "\" type=\"text\" placeholder=\"Name\" aria-label=\"Camera Name\" value=\"" + escapeHtml(camera.name) + "\" onfocus=\"selectSettingsRow(" + index + ")\">"
++ "<input class=\"ipInput\" data-field=\"ip\" data-index=\"" + index + "\" type=\"text\" placeholder=\"Host/IP\" aria-label=\"Camera Host or IP\" value=\"" + escapeHtml(camera.ip) + "\" onfocus=\"selectSettingsRow(" + index + ")\">"
 + "</div>"
 }).join("")
+}
+
+function selectSettingsRow(index){
+if(index < 0 || index >= settingsDraft.length) return
+selectedSettingsIndex = index
+renderSettingsRows()
 }
 
 function loadConfig(){
@@ -513,16 +420,32 @@ id:createCameraId(),
 name:"New Camera",
 ip:""
 })
+selectedSettingsIndex = settingsDraft.length - 1
 renderSettingsRows()
 }
 
-function removeCameraRow(cameraId){
+function removeCameraRow(){
 if(settingsDraft.length <= 1){
 updateStatus("At least one camera is required","warn")
 return
 }
 
-settingsDraft = settingsDraft.filter(camera => camera.id !== cameraId)
+settingsDraft.splice(selectedSettingsIndex,1)
+if(selectedSettingsIndex >= settingsDraft.length){
+selectedSettingsIndex = settingsDraft.length - 1
+}
+renderSettingsRows()
+}
+
+function moveSettingsRow(delta){
+const target = selectedSettingsIndex + delta
+if(selectedSettingsIndex < 0 || selectedSettingsIndex >= settingsDraft.length) return
+if(target < 0 || target >= settingsDraft.length) return
+
+const moved = settingsDraft[selectedSettingsIndex]
+settingsDraft[selectedSettingsIndex] = settingsDraft[target]
+settingsDraft[target] = moved
+selectedSettingsIndex = target
 renderSettingsRows()
 }
 
@@ -543,12 +466,12 @@ function saveSettings(){
 const updatedCameras = collectSettingsRows()
 
 if(updatedCameras.some(camera => !camera.ip)){
-updateStatus("Please enter IP address for all cameras","err")
+updateStatus("Fill all Host/IP fields","err")
 return
 }
 
 if(updatedCameras.length === 0){
-updateStatus("Please add at least one camera","err")
+updateStatus("Add at least one camera","err")
 return
 }
 
@@ -558,30 +481,36 @@ renderCameraCards()
 updateStatus("Camera settings saved","ok")
 refreshLiveTrackingStatus()
 
-const panel = document.getElementById("settingsPanel")
+closeSettingsPanel()
+}
+
+function openSettingsPanel(){
+const panel = document.getElementById("settingsModal")
 const toggleBtn = document.getElementById("settingsToggle")
-if(panel.classList.contains("open")){
+panel.classList.add("open")
+toggleBtn.setAttribute("aria-expanded","true")
+
+settingsDraft = cameraConfig.cameras.map(camera => ({...camera}))
+selectedSettingsIndex = 0
+renderSettingsRows()
+}
+
+function closeSettingsPanel(){
+const panel = document.getElementById("settingsModal")
+const toggleBtn = document.getElementById("settingsToggle")
 panel.classList.remove("open")
 toggleBtn.setAttribute("aria-expanded","false")
 }
-}
 
-function toggleSettingsPanel(){
-const panel = document.getElementById("settingsPanel")
-const toggleBtn = document.getElementById("settingsToggle")
-const isOpen = panel.classList.toggle("open")
-toggleBtn.setAttribute("aria-expanded", String(isOpen))
-
-if(isOpen){
-settingsDraft = cameraConfig.cameras.map(camera => ({...camera}))
-renderSettingsRows()
-}
+function cancelSettings(){
+closeSettingsPanel()
 }
 
 function updateStatus(text,type="info"){
 const status = document.getElementById("status")
 status.className = type
-const fullText = "Status: " + text
+const prefix = type === "ok" ? "OK: " : (type === "err" ? "ERR: " : "Status: ")
+const fullText = prefix + text
 status.innerText = fullText
 status.title = fullText
 }
@@ -618,7 +547,7 @@ if(/\bautotracking\b/.test(text) && /\boff\b/.test(text)) return "OFF"
 return null
 }
 
-async function getCameraTrackingState(ip,name){
+async function getCameraTrackingState(ip,name,cameraId){
 const urls = buildTrackingStatusUrls(ip)
 
 for(const url of urls){
@@ -630,6 +559,7 @@ const responseText = await response.text().catch(()=>"")
 const state = parseTrackingState(responseText)
 
 if(state){
+cameraTrackingState.set(cameraId, state === "ON")
 return {ok:true,state:state,readable:true}
 }
 }catch(error){
@@ -655,13 +585,13 @@ liveRefreshInProgress = true
 
 try{
 if(cameraConfig.cameras.length === 0){
-updateStatus("No cameras configured","warn")
+updateStatus("No cameras","warn")
 return
 }
 
 const results = await Promise.all(
 cameraConfig.cameras.map(async camera => {
-const state = await getCameraTrackingState(camera.ip,camera.name)
+const state = await getCameraTrackingState(camera.ip,camera.name,camera.id)
 return {camera:camera,state:state}
 })
 )
@@ -673,9 +603,9 @@ const statusType = statesOnly.includes("NO RESPONSE")
 : (statesOnly.includes("UNAVAILABLE") ? "warn" : "info")
 
 if(results.every(item => !item.state.ok)){
-updateStatus("Live status unavailable (CORS blocked or no response)",statusType)
+updateStatus("Live status unavailable",statusType)
 }else{
-updateStatus("Live • " + labels.join(" | "),statusType)
+updateStatus("Live: " + labels.join(" | "),statusType)
 }
 }finally{
 liveRefreshInProgress = false
@@ -741,23 +671,24 @@ reply:timeout ? "No response (request timed out)" : "Network error / camera unre
 }
 
 async function sendTrackingCommand(cameraId,ip,name,mode){
-const action = mode === "on" ? "enable" : "disable"
 const url = buildTrackingUrl(ip,mode)
 
 inFlightCameraIds.add(cameraId)
 renderCameraCards()
 try{
-updateStatus(name + ": Sending command...","info")
+updateStatus(name + ": Sending...","info")
 suppressLiveStatusUntil = Date.now() + 3000
 
 const result = await requestCameraWithFeedback(url)
 
 if(result.ok && result.confirmed){
-updateStatus("✅ " + name + " tracking " + (mode === "on" ? "enabled" : "disabled") + " | Camera: " + result.reply,"ok")
+cameraTrackingState.set(cameraId, mode === "on")
+updateStatus(name + ": " + (mode === "on" ? "ON" : "OFF"),"ok")
 }else if(result.ok && !result.confirmed){
-updateStatus("⚠ " + name + ": " + result.reply,"warn")
+cameraTrackingState.set(cameraId, mode === "on")
+updateStatus(name + ": Sent (unconfirmed)","warn")
 }else{
-updateStatus("❌ Failed to " + action + " tracking for " + name,"err")
+updateStatus(name + ": Command failed","err")
 }
 }finally{
 inFlightCameraIds.delete(cameraId)
@@ -785,6 +716,17 @@ updateStatus("Camera not found","err")
 return
 }
 sendTrackingCommand(camera.id,camera.ip,camera.name,"off")
+}
+
+function toggleTracking(cameraKey){
+const camera = getCameraById(cameraKey)
+if(!camera){
+updateStatus("Camera not found","err")
+return
+}
+
+const currentOn = cameraTrackingState.get(camera.id) === true
+sendTrackingCommand(camera.id,camera.ip,camera.name,currentOn ? "off" : "on")
 }
 
 function isTypingTarget(element){
@@ -821,23 +763,23 @@ const index = Number(key) - 1
 const camera = cameraConfig.cameras[index]
 
 if(!camera){
-updateStatus("No camera mapped to " + key,"warn")
+updateStatus("No camera on key " + key,"warn")
 return
 }
 
 if(event.shiftKey){
 trackOff(camera.id)
 }else{
-trackOn(camera.id)
+toggleTracking(camera.id)
 }
 }
 
 async function allTrackingOff(){
-updateStatus("Sending ALL TRACKING OFF...","info")
+updateStatus("ALL OFF...","info")
 suppressLiveStatusUntil = Date.now() + 4000
 
 if(cameraConfig.cameras.length === 0){
-updateStatus("No cameras configured","warn")
+updateStatus("No cameras","warn")
 return
 }
 
@@ -867,11 +809,13 @@ unconfirmedNames.push(cameraName)
 })
 
 if(failedNames.length === 0 && unconfirmedNames.length === 0){
-updateStatus("✅ ALL OFF successful: " + cameraConfig.cameras.map(camera => camera.name).join(", "),"ok")
+cameraConfig.cameras.forEach(camera => cameraTrackingState.set(camera.id,false))
+updateStatus("All off done","ok")
 }else if(failedNames.length === 0){
-updateStatus("⚠ OFF sent, CORS blocked confirmation: " + unconfirmedNames.join(", "),"warn")
+cameraConfig.cameras.forEach(camera => cameraTrackingState.set(camera.id,false))
+updateStatus("All off sent (unconfirmed)","warn")
 }else{
-updateStatus("❌ ALL OFF failed: " + failedNames.join(", "),"err")
+updateStatus("All off failed","err")
 }
 }finally{
 cameraConfig.cameras.forEach(camera => inFlightCameraIds.delete(camera.id))

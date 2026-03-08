@@ -4,6 +4,8 @@
 
 It sends tracking toggle commands directly from OBS using Qt Network HTTP requests to camera CGI endpoints, avoiding browser source CORS limitations and keeping live control fast and reliable.
 
+This repository also includes an HTML-based alternative UI at `PTZ Camera Tracking OBS.html` for users who want a browser-driven control surface.
+
 Keywords: OBS PTZ plugin, OBS camera tracking toggle, PTZ autotracking OBS, OBS hotkeys for PTZ, Samtav PTZ CGI.
 
 ## Why This Plugin
@@ -86,6 +88,22 @@ Assets:
 3. Add to `obs-studio/plugins/CMakeLists.txt`:
    - `add_subdirectory(ptz-tracking-dock)`
 4. Build OBS normally.
+
+## HTML Alternative (Browser UI)
+
+If you do not want to install a native plugin, you can use:
+
+- `PTZ Camera Tracking OBS.html`
+
+What it provides:
+
+- Compact PTZ control UI with per-camera `ON/OFF`, `ALL OFF`, and camera settings.
+- Local camera list persistence via browser `localStorage`.
+
+Important differences from the native plugin:
+
+- No true OBS frontend hotkeys (browser key handling only when the page is focused).
+- Subject to browser/network restrictions depending on your OBS Browser Source and camera CORS behavior.
 
 ## Usage
 
