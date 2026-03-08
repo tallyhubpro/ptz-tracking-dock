@@ -69,6 +69,10 @@ if(PTZ_TRACKING_DOCK_STANDALONE)
   target_link_libraries(ptz-tracking-dock PRIVATE ${OBS_LIBOBS_LIBRARY} ${OBS_FRONTEND_API_LIBRARY})
 else()
   # If we are being built from inside OBS Studio, these targets usually exist.
+  if(EXISTS "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
+    target_include_directories(ptz-tracking-dock PRIVATE "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
+  endif()
+
   if(TARGET libobs)
     target_link_libraries(ptz-tracking-dock PRIVATE libobs)
   endif()

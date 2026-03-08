@@ -41,6 +41,8 @@ jobs:
         run: |
           robocopy plugin-src obs-studio/plugins/ptz-tracking-dock /E /NFL /NDL /NJH /NJS /NP
           if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }
+          # robocopy uses non-zero success codes (for example 1 = files copied)
+          $global:LASTEXITCODE = 0
 
           $cmakeList = "obs-studio/plugins/CMakeLists.txt"
           $line = "add_subdirectory(ptz-tracking-dock)"
