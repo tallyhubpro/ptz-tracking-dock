@@ -44,7 +44,7 @@ jobs:
 
           $cmakeList = "obs-studio/plugins/CMakeLists.txt"
           $line = "add_subdirectory(ptz-tracking-dock)"
-          if (-not (Select-String -Path $cmakeList -Pattern [regex]::Escape($line) -Quiet)) {
+          if (-not (Select-String -Path $cmakeList -Pattern ([regex]::Escape($line)) -Quiet)) {
             Add-Content -Path $cmakeList -Value "`n$line"
           }
 
@@ -110,15 +110,15 @@ jobs:
           line="add_subdirectory(ptz-tracking-dock)"
           grep -Fxq "$line" "$cmake_list" || printf "\n%s\n" "$line" >> "$cmake_list"
 
-      - name: Configure OBS (CMake + Ninja)
+      - name: Configure OBS (CMake + Xcode)
         run: |
-          cmake -S obs-studio -B build -G Ninja \
+          cmake -S obs-studio -B build -G Xcode \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_BROWSER=OFF \
             -DENABLE_SCRIPTING=OFF
 
       - name: Build plugin target
-        run: cmake --build build --target ptz-tracking-dock --parallel
+        run: cmake --build build --config Release --target ptz-tracking-dock --parallel
 
       - name: Collect plugin artifact
         run: |
