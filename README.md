@@ -1,8 +1,8 @@
-# PTZ Tracking Dock for OBS Studio
+# ptz-tracking-dock
 
-PTZ Tracking Dock is a native OBS Studio plugin for fast PTZ AI tracking toggle control from inside OBS.
+`ptz-tracking-dock` is a native OBS Studio plugin that adds a compact PTZ tracking control dock and true OBS frontend hotkeys for per-camera `ON`/`OFF` and global `ALL OFF` actions.
 
-It adds a compact OBS dock with per-camera tracking ON/OFF buttons, an ALL OFF panic action, and global OBS hotkeys. The plugin uses native Qt HTTP requests to camera CGI endpoints, so it works without browser source CORS limitations.
+It sends tracking toggle commands directly from OBS using Qt Network HTTP requests to camera CGI endpoints, avoiding browser source CORS limitations and keeping live control fast and reliable.
 
 Keywords: OBS PTZ plugin, OBS camera tracking toggle, PTZ autotracking OBS, OBS hotkeys for PTZ, Samtav PTZ CGI.
 
@@ -119,6 +119,7 @@ GitHub Actions automatically builds artifacts on push/tag:
 
 - Windows zip artifact
 - macOS zip artifact
+- Both are built against OBS Studio `31.1.2` source (real `libobs`/`obs-frontend-api`, not dev stubs)
 - On tags, both assets are attached to the GitHub Release automatically.
 
 Workflow file:
