@@ -143,7 +143,10 @@ void PtzDockController::buildDock()
 
 	// Emergency button
 	allOff_ = new QPushButton(QStringLiteral("ALL OFF"), root_);
-	QObject::connect(allOff_, &QPushButton::clicked, root_, [this]() { http_.sendAllOff(cameras_); });
+	QObject::connect(allOff_, &QPushButton::clicked, root_, [this]() {
+		setStatus(QStringLiteral("ALL OFF..."), 0);
+		http_.sendAllOff(cameras_);
+	});
 	rootLayout_->addWidget(allOff_);
 
 	// Bottom status

@@ -65,7 +65,7 @@ PtzHttpClient::PtzHttpClient(QObject *parent) : QObject(parent)
 void PtzHttpClient::sendAutotracking(const PtzCamera &camera, bool enabled)
 {
 	const QString url = buildUrl(camera.host, enabled);
-	const QString label = camera.name + QStringLiteral(": tracking ") + (enabled ? QStringLiteral("ON") : QStringLiteral("OFF"));
+	const QString label = camera.name;
 	sendRequest(url, label, enabled);
 }
 
@@ -81,7 +81,7 @@ void PtzHttpClient::sendRequest(const QString &url, const QString &label, bool e
 	QNetworkRequest req{QUrl(url)};
 	req.setHeader(QNetworkRequest::UserAgentHeader, QStringLiteral("ptz-tracking-dock"));
 
-	emit statusMessage(QStringLiteral("Sending: ") + label, 0);
+	emit statusMessage(label + QStringLiteral(": Sending..."), 0);
 
 	QNetworkReply *reply = net->get(req);
 	QTimer *timer = new QTimer(reply);
@@ -90,7 +90,7 @@ void PtzHttpClient::sendRequest(const QString &url, const QString &label, bool e
 
 	QObject::connect(timer, &QTimer::timeout, reply, [this, reply, label]() {
 		reply->abort();
-		emit statusMessage(QStringLiteral("No response (timeout): ") + label, 2);
+		emit statusMessage(label + QStringLiteral(": Command failed"), 2);
 	});
 
 	QObject::connect(reply, &QNetworkReply::finished, reply, [this, reply, label, enabled]() {
@@ -100,27 +100,23 @@ void PtzHttpClient::sendRequest(const QString &url, const QString &label, bool e
 		const QString bodyPreview = compactPreview(body);
 		const QString bodyLower = body.toLower();
 		if (reply->error() != QNetworkReply::NoError) {
-			emit statusMessage(QStringLiteral("Failed: ") + label + QStringLiteral(" (") + reply->errorString() + QStringLiteral(")"), 2);
+			emit statusMessage(label + QStringLiteral(": Command failed"), 2);
 			reply->deleteLater();
 			return;
 		}
 		if (code >= 400) {
-			emit statusMessage(QStringLiteral("HTTP ") + QString::number(code) + QStringLiteral(": ") + label, 2);
+			emit statusMessage(label + QStringLiteral(": Command failed"), 2);
 			reply->deleteLater();
 			return;
 		}
 
 		if (responseConfirmsTracking(bodyLower, enabled)) {
-			emit statusMessage(QStringLiteral("Confirmed: ") + label, 1);
+			emit statusMessage(label + QStringLiteral(": ") + (enabled ? QStringLiteral("ON") : QStringLiteral("OFF")), 1);
 			reply->deleteLater();
 			return;
 		}
 
-		if (!bodyPreview.isEmpty()) {
-			emit statusMessage(QStringLiteral("HTTP ") + QString::number(code) + QStringLiteral(" (unconfirmed): ") + label + QStringLiteral(" | ") + bodyPreview, 0);
-		} else {
-			emit statusMessage(QStringLiteral("HTTP ") + QString::number(code) + QStringLiteral(" (no body): ") + label, 0);
-		}
+		emit statusMessage(label + QStringLiteral(": Sent (unconfirmed)"), 0);
 		reply->deleteLater();
 	});
 
