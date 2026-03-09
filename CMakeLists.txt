@@ -9,8 +9,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-option(PTZ_TRACKING_DOCK_STANDALONE "Attempt standalone build (requires OBS + Qt dev packages already discoverable)" OFF)
-option(PTZ_TRACKING_DOCK_DEV_STUBS "Allow local compile without OBS SDK by using stub headers" ON)
+option(PTZ_TRACKING_DOCK_DYNAMIC_LOOKUP "Build without OBS stubs and resolve OBS symbols at runtime (macOS/local dev fallback)" OFF)
 
 # NOTE:
 # The most reliable way to build OBS plugins is inside the OBS Studio source tree.
@@ -54,49 +53,32 @@ else()
 endif()
 
 # OBS headers/libs are normally provided by OBS build.
-# For standalone experimentation you may set these manually.
-if(PTZ_TRACKING_DOCK_STANDALONE)
-  set(OBS_INCLUDE_DIR "" CACHE PATH "Path to OBS include dir containing obs-module.h")
-  set(OBS_FRONTEND_INCLUDE_DIR "" CACHE PATH "Path to OBS frontend API include dir containing obs-frontend-api.h")
-  set(OBS_LIBOBS_LIBRARY "" CACHE FILEPATH "Path to libobs library")
-  set(OBS_FRONTEND_API_LIBRARY "" CACHE FILEPATH "Path to obs-frontend-api library")
+# If we are being built from inside OBS Studio, these targets usually exist.
+if(EXISTS "${CMAKE_SOURCE_DIR}/frontend/api")
+  target_include_directories(ptz-tracking-dock PRIVATE "${CMAKE_SOURCE_DIR}/frontend/api")
+elseif(EXISTS "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
+  # Fallback for older/alternate OBS source layouts.
+  target_include_directories(ptz-tracking-dock PRIVATE "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
+endif()
 
-  if(NOT OBS_INCLUDE_DIR OR NOT OBS_FRONTEND_INCLUDE_DIR OR NOT OBS_LIBOBS_LIBRARY OR NOT OBS_FRONTEND_API_LIBRARY)
-    message(FATAL_ERROR "Standalone build requires OBS_* cache variables set.")
-  endif()
+if(TARGET libobs)
+  target_link_libraries(ptz-tracking-dock PRIVATE libobs)
+endif()
+if(TARGET obs-frontend-api)
+  target_link_libraries(ptz-tracking-dock PRIVATE obs-frontend-api)
+elseif(TARGET OBS::frontend-api)
+  target_link_libraries(ptz-tracking-dock PRIVATE OBS::frontend-api)
+endif()
 
-  target_include_directories(ptz-tracking-dock PRIVATE ${OBS_INCLUDE_DIR} ${OBS_FRONTEND_INCLUDE_DIR})
-  target_link_libraries(ptz-tracking-dock PRIVATE ${OBS_LIBOBS_LIBRARY} ${OBS_FRONTEND_API_LIBRARY})
-else()
-  # If we are being built from inside OBS Studio, these targets usually exist.
-  if(EXISTS "${CMAKE_SOURCE_DIR}/frontend/api")
-    target_include_directories(ptz-tracking-dock PRIVATE "${CMAKE_SOURCE_DIR}/frontend/api")
-  elseif(EXISTS "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
-    # Fallback for older/alternate OBS source layouts.
-    target_include_directories(ptz-tracking-dock PRIVATE "${CMAKE_SOURCE_DIR}/UI/obs-frontend-api")
-  endif()
-
-  if(TARGET libobs)
-    target_link_libraries(ptz-tracking-dock PRIVATE libobs)
-  endif()
-  if(TARGET obs-frontend-api)
-    target_link_libraries(ptz-tracking-dock PRIVATE obs-frontend-api)
-  elseif(TARGET OBS::frontend-api)
-    target_link_libraries(ptz-tracking-dock PRIVATE OBS::frontend-api)
-  endif()
-
-  if(NOT TARGET libobs AND NOT TARGET obs-frontend-api)
-    if(PTZ_TRACKING_DOCK_DEV_STUBS)
-      message(WARNING "Building with OBS API stubs (dev-only). Build against OBS source for production binaries.")
-      target_include_directories(ptz-tracking-dock PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/obs_stubs)
-      target_sources(ptz-tracking-dock PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/obs_stubs/obs_stubs.cpp)
-      if(APPLE)
-        # Let OBS resolve OBS symbols at runtime when loading the plugin bundle.
-        target_link_options(ptz-tracking-dock PRIVATE "-Wl,-undefined,dynamic_lookup")
-      endif()
-    else()
-      message(FATAL_ERROR "OBS targets not found. Build inside OBS source tree or enable PTZ_TRACKING_DOCK_DEV_STUBS.")
+if(NOT TARGET libobs AND NOT TARGET obs-frontend-api)
+  if(PTZ_TRACKING_DOCK_DYNAMIC_LOOKUP)
+    message(WARNING "Building with runtime OBS symbol lookup (no stubs linked).")
+    target_include_directories(ptz-tracking-dock PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/obs_stubs)
+    if(APPLE)
+      target_link_options(ptz-tracking-dock PRIVATE "-Wl,-undefined,dynamic_lookup")
     endif()
+  else()
+    message(FATAL_ERROR "OBS targets not found. Build inside OBS source tree or enable PTZ_TRACKING_DOCK_DYNAMIC_LOOKUP.")
   endif()
 endif()
 
