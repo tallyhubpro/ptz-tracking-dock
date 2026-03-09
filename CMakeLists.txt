@@ -81,6 +81,8 @@ else()
   endif()
   if(TARGET obs-frontend-api)
     target_link_libraries(ptz-tracking-dock PRIVATE obs-frontend-api)
+  elseif(TARGET OBS::frontend-api)
+    target_link_libraries(ptz-tracking-dock PRIVATE OBS::frontend-api)
   endif()
 
   if(NOT TARGET libobs AND NOT TARGET obs-frontend-api)
