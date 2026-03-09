@@ -68,6 +68,10 @@ if(TARGET obs-frontend-api)
   target_link_libraries(ptz-tracking-dock PRIVATE obs-frontend-api)
 elseif(TARGET OBS::frontend-api)
   target_link_libraries(ptz-tracking-dock PRIVATE OBS::frontend-api)
+elseif(EXISTS "${CMAKE_SOURCE_DIR}/frontend/api/CMakeLists.txt")
+  # In OBS superbuilds, this plugin may be configured before frontend/api is added.
+  # Link by library name so the final link still resolves against obs-frontend-api.
+  target_link_libraries(ptz-tracking-dock PRIVATE obs-frontend-api)
 endif()
 
 if(NOT TARGET libobs AND NOT TARGET obs-frontend-api)
