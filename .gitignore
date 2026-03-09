@@ -3,6 +3,14 @@
 
 # Build artifacts
 build/
+build-*/
+
+# Local OBS source/build trees
+.local/
+
+# Packaged outputs
+*.zip
+*.plugin
 
 # CMake/Qt generated files
 CMakeCache.txt

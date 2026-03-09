@@ -74,7 +74,7 @@ QVector<PtzCamera> PtzConfig::load()
 	QVector<PtzCamera> out;
 	out.reserve(cams.size());
 
-	for (const QJsonValue &v : cams) {
+	for (const QJsonValue v : cams) {
 		if (!v.isObject())
 			continue;
 		const QJsonObject c = v.toObject();

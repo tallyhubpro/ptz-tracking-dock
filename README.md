@@ -4,7 +4,7 @@
 
 It sends tracking toggle commands directly from OBS using Qt Network HTTP requests to camera CGI endpoints, avoiding browser source CORS limitations and keeping live control fast and reliable.
 
-This repository also includes an HTML-based alternative UI at `PTZ Camera Tracking OBS.html` for users who want a browser-driven control surface.
+This repository also includes an HTML-based alternative UI at `web/PTZ Camera Tracking OBS.html` for users who want a browser-driven control surface.
 
 Keywords: OBS PTZ plugin, OBS camera tracking toggle, PTZ autotracking OBS, OBS hotkeys for PTZ, Samtav PTZ CGI.
 
@@ -93,7 +93,7 @@ Assets:
 
 If you do not want to install a native plugin, you can use:
 
-- `PTZ Camera Tracking OBS.html`
+- `web/PTZ Camera Tracking OBS.html`
 
 What it provides:
 
@@ -142,7 +142,7 @@ GitHub Actions automatically builds artifacts on push/tag:
 
 Workflow file:
 
-- `.github/workflows/windows-artifact.yml`
+- `.github/workflows/ci-release.yml`
 
 ## Troubleshooting
 
