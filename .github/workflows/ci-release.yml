@@ -16,18 +16,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout plugin source
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: plugin-src
-
-      - name: Checkout OBS Studio 31.1.2
-        uses: actions/checkout@v4
-        with:
-          repository: obsproject/obs-studio
-          ref: 31.1.2
-          submodules: recursive
-          path: obs-studio
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -36,31 +26,16 @@ jobs:
           arch: "win64_msvc2022_64"
           cache: true
 
-      - name: Inject plugin into OBS tree
+      - name: Configure (CMake + Ninja)
         shell: pwsh
         run: |
-          robocopy plugin-src obs-studio/plugins/ptz-tracking-dock /E /NFL /NDL /NJH /NJS /NP
-          if ($LASTEXITCODE -ge 8) { exit $LASTEXITCODE }
-          # robocopy uses non-zero success codes (for example 1 = files copied)
-          $global:LASTEXITCODE = 0
-
-          $cmakeList = "obs-studio/plugins/CMakeLists.txt"
-          $line = "add_subdirectory(ptz-tracking-dock)"
-          if (-not (Select-String -Path $cmakeList -Pattern ([regex]::Escape($line)) -Quiet)) {
-            Add-Content -Path $cmakeList -Value "`n$line"
-          }
-
-      - name: Configure OBS (CMake)
-        shell: pwsh
-        run: |
-          cmake -S obs-studio -B build -G "Visual Studio 17 2022" -A x64 `
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 `
             -DCMAKE_BUILD_TYPE=Release `
-            -DBUILD_BROWSER=OFF `
-            -DENABLE_SCRIPTING=OFF
+            -DPTZ_TRACKING_DOCK_DEV_STUBS=ON
 
-      - name: Build plugin target
+      - name: Build
         shell: pwsh
-        run: cmake --build build --config Release --target ptz-tracking-dock --parallel
+        run: cmake --build build --config Release --parallel
 
       - name: Collect plugin artifact
         shell: pwsh
@@ -84,18 +59,8 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout plugin source
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: plugin-src
-
-      - name: Checkout OBS Studio 31.1.2
-        uses: actions/checkout@v4
-        with:
-          repository: obsproject/obs-studio
-          ref: 31.1.2
-          submodules: recursive
-          path: obs-studio
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -104,23 +69,14 @@ jobs:
           arch: "clang_64"
           cache: true
 
-      - name: Inject plugin into OBS tree
+      - name: Configure (CMake + Ninja)
         run: |
-          rsync -a --delete plugin-src/ obs-studio/plugins/ptz-tracking-dock/
-
-          cmake_list="obs-studio/plugins/CMakeLists.txt"
-          line="add_subdirectory(ptz-tracking-dock)"
-          grep -Fxq "$line" "$cmake_list" || printf "\n%s\n" "$line" >> "$cmake_list"
-
-      - name: Configure OBS (CMake + Xcode)
-        run: |
-          cmake -S obs-studio -B build -G Xcode \
+          cmake -S . -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_BROWSER=OFF \
-            -DENABLE_SCRIPTING=OFF
+            -DPTZ_TRACKING_DOCK_DEV_STUBS=ON
 
-      - name: Build plugin target
-        run: cmake --build build --config Release --target ptz-tracking-dock --parallel
+      - name: Build
+        run: cmake --build build --parallel
 
       - name: Collect plugin artifact
         run: |
