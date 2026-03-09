@@ -21,10 +21,11 @@ jobs:
         with:
           path: plugin-src
 
-      - name: Checkout OBS Studio (latest)
+      - name: Checkout OBS Studio 31.1.2
         uses: actions/checkout@v4
         with:
           repository: obsproject/obs-studio
+          ref: 31.1.2
           submodules: recursive
           path: obs-studio
 
@@ -88,10 +89,11 @@ jobs:
         with:
           path: plugin-src
 
-      - name: Checkout OBS Studio (latest)
+      - name: Checkout OBS Studio 31.1.2
         uses: actions/checkout@v4
         with:
           repository: obsproject/obs-studio
+          ref: 31.1.2
           submodules: recursive
           path: obs-studio
 
