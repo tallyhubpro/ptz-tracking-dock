@@ -23,6 +23,12 @@ add_library(ptz-tracking-dock MODULE
   src/ptz_dock.cpp
 )
 
+# Export the OBS plugin ABI symbols explicitly on Windows (MSVC doesn't
+# export extern "C" symbols unless annotated or listed in a .def file).
+if(WIN32)
+  target_sources(ptz-tracking-dock PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/ptz-tracking-dock.def)
+endif()
+
 target_include_directories(ptz-tracking-dock PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/src
 )

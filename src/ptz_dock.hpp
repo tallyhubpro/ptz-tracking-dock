@@ -9,12 +9,12 @@
 #include "ptz_http.hpp"
 #include "ptz_types.hpp"
 
-class QDockWidget;
 class QLabel;
 class QScrollArea;
 class QToolButton;
 class QPushButton;
 class QVBoxLayout;
+#include <QVector>
 
 class PtzDockController : public QObject {
 	Q_OBJECT
@@ -37,7 +37,6 @@ private:
 	static void hotkeyOff(void *data, obs_hotkey_id, obs_hotkey_t *, bool pressed);
 	static void hotkeyAllOff(void *data, obs_hotkey_id, obs_hotkey_t *, bool pressed);
 
-	QDockWidget *dock_ = nullptr;
 	QWidget *root_ = nullptr;
 	QVBoxLayout *rootLayout_ = nullptr;
 	QVBoxLayout *cameraLayout_ = nullptr;
@@ -47,6 +46,7 @@ private:
 	QPushButton *allOff_ = nullptr;
 
 	QVector<PtzCamera> cameras_;
+	QVector<QPushButton *> toggles_;
 	PtzHttpClient http_;
 
 	obs_hotkey_id hk_all_off_ = OBS_INVALID_HOTKEY_ID;

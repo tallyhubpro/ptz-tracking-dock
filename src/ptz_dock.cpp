@@ -2,8 +2,8 @@
 
 #include <obs-frontend-api.h>
 
-#include <QDockWidget>
 #include <QEvent>
+#include <QMetaObject>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLayoutItem>
@@ -45,7 +45,7 @@ void applyToggleVisual(QPushButton *toggle, bool active)
 	toggle->setStyleSheet(active ? activeStyle : inactiveStyle);
 }
 
-QWidget *buildCameraRow(const PtzCamera &cam, int index, PtzHttpClient *http)
+QWidget *buildCameraRow(const PtzCamera &cam, int index, PtzHttpClient *http, QPushButton **toggleOut)
 {
 	auto *row = new QWidget();
 	auto *layout = new QHBoxLayout(row);
@@ -72,6 +72,8 @@ QWidget *buildCameraRow(const PtzCamera &cam, int index, PtzHttpClient *http)
 	layout->addWidget(toggle);
 
 	row->setObjectName(QStringLiteral("ptzRow") + QString::number(index));
+	if (toggleOut)
+		*toggleOut = toggle;
 	return row;
 }
 } // namespace
@@ -106,13 +108,10 @@ void PtzDockController::initialize()
 
 void PtzDockController::buildDock()
 {
-	if (dock_)
+	if (root_)
 		return;
 
-	dock_ = new QDockWidget(QStringLiteral("PTZ Tracking"));
-	dock_->setObjectName(QStringLiteral("ptz-tracking-dock"));
-
-	root_ = new QWidget(dock_);
+	root_ = new QWidget();
 	rootLayout_ = new QVBoxLayout(root_);
 	rootLayout_->setContentsMargins(6, 6, 6, 6);
 	rootLayout_->setSpacing(6);
@@ -157,12 +156,9 @@ void PtzDockController::buildDock()
 	rootLayout_->addWidget(status_);
 
 	root_->setLayout(rootLayout_);
-	dock_->setWidget(root_);
 	root_->installEventFilter(this);
-	dock_->installEventFilter(this);
 
-	obs_frontend_add_custom_qdock("ptz-tracking-dock", dock_);
-	applyResponsiveLayout();
+	obs_frontend_add_dock_by_id("ptz-tracking-dock", "PTZ Tracking", root_);
 }
 
 void PtzDockController::rebuildCameraUi()
@@ -175,12 +171,25 @@ void PtzDockController::rebuildCameraUi()
 		delete child->widget();
 		delete child;
 	}
+	toggles_.clear();
 
-	int index = 0;
-	for (const PtzCamera &cam : cameras_) {
-		cameraLayout_->addWidget(buildCameraRow(cam, index, &http_));
-		index++;
+	if (cameras_.isEmpty()) {
+		// Show helpful message when no cameras configured
+		auto *msg = new QLabel(QStringLiteral("No cameras configured.\nClick ⚙ to add cameras."));
+		msg->setAlignment(Qt::AlignCenter);
+		msg->setWordWrap(true);
+		msg->setStyleSheet(QStringLiteral("color: #888; padding: 20px;"));
+		cameraLayout_->addWidget(msg);
+	} else {
+		int index = 0;
+		for (const PtzCamera &cam : cameras_) {
+			QPushButton *toggle = nullptr;
+			cameraLayout_->addWidget(buildCameraRow(cam, index, &http_, &toggle));
+			toggles_.append(toggle);
+			index++;
+		}
 	}
+	
 	cameraLayout_->addStretch(1);
 	applyResponsiveLayout();
 }
@@ -300,7 +309,7 @@ void PtzDockController::applyResponsiveLayout()
 
 bool PtzDockController::eventFilter(QObject *watched, QEvent *event)
 {
-	if ((watched == root_ || watched == dock_) &&
+	if (watched == root_ &&
 	    (event->type() == QEvent::Resize || event->type() == QEvent::Show)) {
 		applyResponsiveLayout();
 	}
@@ -318,10 +327,15 @@ void PtzDockController::hotkeyOn(void *data, obs_hotkey_id id, obs_hotkey_t *, b
 
 	for (int i = 0; i < self->hk_on_.size(); ++i) {
 		if (self->hk_on_[i] == id) {
-			if (i < self->cameras_.size())
+			if (i < self->cameras_.size()) {
 				self->http_.sendAutotracking(self->cameras_[i], true);
-			else
+				if (i < self->toggles_.size() && self->toggles_[i])
+					QMetaObject::invokeMethod(self->toggles_[i], [btn = self->toggles_[i]]() {
+						btn->setChecked(true);
+					}, Qt::QueuedConnection);
+			} else {
 				self->setStatus(QStringLiteral("No camera mapped to hotkey ") + QString::number(i + 1), 2);
+			}
 			return;
 		}
 	}
@@ -337,10 +351,15 @@ void PtzDockController::hotkeyOff(void *data, obs_hotkey_id id, obs_hotkey_t *, 
 
 	for (int i = 0; i < self->hk_off_.size(); ++i) {
 		if (self->hk_off_[i] == id) {
-			if (i < self->cameras_.size())
+			if (i < self->cameras_.size()) {
 				self->http_.sendAutotracking(self->cameras_[i], false);
-			else
+				if (i < self->toggles_.size() && self->toggles_[i])
+					QMetaObject::invokeMethod(self->toggles_[i], [btn = self->toggles_[i]]() {
+						btn->setChecked(false);
+					}, Qt::QueuedConnection);
+			} else {
 				self->setStatus(QStringLiteral("No camera mapped to hotkey ") + QString::number(i + 1), 2);
+			}
 			return;
 		}
 	}
@@ -354,4 +373,10 @@ void PtzDockController::hotkeyAllOff(void *data, obs_hotkey_id, obs_hotkey_t *, 
 	if (!self)
 		return;
 	self->http_.sendAllOff(self->cameras_);
+	for (int i = 0; i < self->toggles_.size(); ++i) {
+		if (self->toggles_[i])
+			QMetaObject::invokeMethod(self->toggles_[i], [btn = self->toggles_[i]]() {
+				btn->setChecked(false);
+			}, Qt::QueuedConnection);
+	}
 }
