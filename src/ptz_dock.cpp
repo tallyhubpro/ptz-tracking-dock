@@ -202,11 +202,6 @@ void PtzDockController::openSettings()
 		return;
 
 	const QVector<PtzCamera> updated = dlg.cameras();
-	if (updated.isEmpty()) {
-		setStatus(QStringLiteral("At least one camera is required"), 2);
-		return;
-	}
-
 	cameras_ = updated;
 	PtzConfig::save(cameras_);
 	rebuildCameraUi();

@@ -38,8 +38,6 @@ PtzSettingsDialog::PtzSettingsDialog(const QVector<PtzCamera> &initial, QWidget 
 
 	for (const PtzCamera &cam : initial)
 		addRow(cam);
-	if (table_->rowCount() == 0)
-		addRow({QStringLiteral("Stage Camera"), QStringLiteral("192.168.1.108")});
 
 	add_ = new QPushButton(QStringLiteral("+"), this);
 	remove_ = new QPushButton(QStringLiteral("–"), this);
